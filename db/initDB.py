@@ -1,29 +1,35 @@
-from sqlalchemy import create_engine, Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import create_engine, Boolean, Column, ForeignKey, Integer, String, engine
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session
+from dotenv import load_dotenv
+import os
 
-SQLALCHEMY_DATABASE_URL = "mariadb+pymysql://ADMIN:ADMIN@121.140.105.132:3307/ADMIN?charset=utf8mb4"
-
+load_dotenv("../.env")
+DB_CONNECTOR = os.getenv("DB_CONNECTOR")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWD = os.getenv("DB_PASSWD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+SQLALCHEMY_DATABASE_URL = engine.URL.create(
+    drivername=DB_CONNECTOR,
+    username=DB_USER,
+    password=DB_PASSWD,
+    host=DB_HOST,
+    port=DB_PORT,
+    database=DB_NAME,
+)
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
 
-class User(Base):
-    __tablename__ = "USERS"
-
-    id = Column("USER_ID",Integer, primary_key=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    is_active = Column(Boolean, default=True)
-
-
-def get_user(db: Session):
-    v = db.query(User)
-    print(v)
-    
-    return v.all()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-if __name__ == '__main__':
-    print(engine)
+Base.metadata.create_all(bind=engine)

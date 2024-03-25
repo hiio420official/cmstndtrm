@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="27d99976-7dd8-4654-a2aa-a1c410932631" name="hiio420">
+        <fileTransfer accessType="SFTP" host="hiio420.com" port="22" sshConfigId="fede4381-19a0-4829-9e44-77b5584cadf7" sshConfig="hiio420@hiio420.com:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
