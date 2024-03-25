@@ -9,6 +9,7 @@ main.py
 
 """
 import math
+import os.path
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -18,7 +19,10 @@ from libs import ExcelUtils
 
 # 엑셀 파일 불러오기
 
-file_path = "F:\\[01]project\\commonStandardTerm\\upload\\(붙임)공공데이터 공통표준용어(2022.7월).xlsx"
+CUR_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_DIR = os.path.join(CUR_DIR, 'upload')
+file_path = os.path.join(UPLOAD_DIR, '(붙임)공공데이터 공통표준용어(2022.7월).xlsx')
+
 excel_utils = ExcelUtils()
 df_dict = excel_utils.read_excel(file_path)
 
@@ -31,6 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class Item(BaseModel):
     data_id: int = 0
     page: int = 1
@@ -38,13 +43,14 @@ class Item(BaseModel):
 
 
 @app.get("/")
-def read_root(data_id: int = 0, page: int = 1, limit: int = 10,srchTxt=""):
+def read_root(data_id: int = 0, page: int = 1, limit: int = 10, srchTxt: str = ""):
     if page < 1:
         page = 0
     if limit < 10:
         limit = 10
     df = df_dict[data_id]
     df = df[df.apply(lambda row: row.astype(str).str.contains(srchTxt, case=False).any(), axis=1)]
+    print(df)
     first_idx = (page - 1) * limit
     last_idx = first_idx + limit - 1
     total_size = df.shape[0]
@@ -61,5 +67,5 @@ def read_root(data_id: int = 0, page: int = 1, limit: int = 10,srchTxt=""):
 
     return {"sheetName": excel_utils.sheet_names[data_id], "data_id": data_id, "page": page, "limit": limit,
             "first_page": first_page, "last_page": last_page, "firstIdx": first_idx, "lastIdx": last_idx,
-            "totalSize": total_size,"srchTxt":srchTxt,
+            "totalSize": total_size, "srchTxt": srchTxt,
             "data": data}
