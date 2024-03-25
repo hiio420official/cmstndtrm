@@ -1,4 +1,6 @@
+"use server"
 import Image from "next/image";
+import {FormEvent} from "react";
 type PropsType = {
     searchParams: searchParmasType
 };
@@ -6,7 +8,8 @@ type searchParmasType= { [key: string]: string  };
 export default async function Home({searchParams}:PropsType) {
 
     const searchParamTxt = Object.keys(searchParams).reduce((arr:string[],k:string)=>[...arr,`${k}=${searchParams[k]}`],[]).join("&")
-    const getData = async(searchParams:searchParmasType)=>{
+    const getData = async (e: FormEvent<HTMLFormElement>)=>{
+        "use server"
         const url = new URL("http://localhost:4882")
         Object.keys(searchParams).map((k)=>{
             url.searchParams.append(k,searchParams[k] || "");
@@ -14,20 +17,20 @@ export default async function Home({searchParams}:PropsType) {
 
         const resp = await fetch(url,{cache:"no-cache"})
         const respJson = await resp.json();
-        const {data,page,last_page} = respJson;
-        console.log(data);
         return respJson
     }
-    const resp = await getData(searchParams);
-    let last = Math.ceil(resp.page/10) * 10 >= resp.last_page?resp.last_page:Math.ceil(resp.page/10) * 10;
-    let first = last -9;
+    // const resp = await getData(searchParams);
+    // let last = Math.ceil(resp.page/10) * 10 >= resp.last_page?resp.last_page:Math.ceil(resp.page/10) * 10;
+    // let first = last -(last%10==0?9:last%10-1);
+
+
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-24">
-            <form action={"/"} method={"GET"}>
+            <form onSubmit={getData} method={"GET"} className={"w-full"}>
                 <div className="pt-2 relative mx-auto text-gray-600">
                     <input
                         className="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none w-full"
-                        type="search" name="srchTxt" placeholder="Search" value={resp.srchTxt}/>
+                        type="search" name="srchTxt" placeholder="Search" defaultValue={resp.srchTxt}/>
                     <button type="submit" className="absolute right-1 h-4/5">
                         <Image src={"/images/search-svgrepo-com.svg"} alt={"search images"} width="40" height="40"
                                className={"h-4/5"}/>
