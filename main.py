@@ -10,6 +10,7 @@ main.py
 """
 import math
 import os.path
+import time
 from typing import Optional
 
 from fastapi import FastAPI
@@ -45,7 +46,7 @@ class Item(BaseModel):
 
 
 @app.get("/", response_model=ResponseModelPaging[dict])
-def read_root(dataId: Optional[int] = 0, page: Optional[int] = 1, limit: Optional[int] = 10,
+def read_root(dataId: Optional[int] = 0, page: Optional[int] = 1, limit: Optional[int] = 10, order: Optional[int] =1,
               srchTxt: Optional[str] = ""):
     try:
         if page < 1:
@@ -54,7 +55,7 @@ def read_root(dataId: Optional[int] = 0, page: Optional[int] = 1, limit: Optiona
             limit = 10
         df = df_dict[dataId]
         df = df[df.apply(lambda row: row.astype(str).str.contains(srchTxt, case=False).any(), axis=1)]
-
+        df = df.sort_values(by=[df.columns[order]],ascending=True)
         first_idx = (page - 1) * limit
         last_idx = first_idx + limit - 1
         total_size = df.shape[0]

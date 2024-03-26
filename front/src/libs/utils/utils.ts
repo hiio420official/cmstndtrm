@@ -19,7 +19,7 @@ export class Paging {
         this.curPagingSize = this.curLastPage - this.curFirstPage + 1;
         this.curPrevPage = paging.page - 1;
         this.curNextPage = paging.page + 1;
-        this.curPrevPageOk = 0 < this.curPrevPage;
+        this.curPrevPageOk = 0 <= this.curPrevPage;
         this.curNextPageOk =this.curNextPage < paging.totalPage;
         this.lastPage = paging.totalPage;
     }
