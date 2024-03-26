@@ -1,1 +1,1 @@
-GET http://127.0.0.1:4882/?data_id=0&page=10&limit=100&srchTxt=검색
+GET http://127.0.0.1:4882/?srchTxt=검색&page=null

@@ -10,12 +10,14 @@ main.py
 """
 import math
 import os.path
+from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
 from libs import ExcelUtils
+from models import ResponseModel, ResponseModelPaging, Paging
 
 # 엑셀 파일 불러오기
 
@@ -42,30 +44,33 @@ class Item(BaseModel):
     limit: int = 10
 
 
-@app.get("/")
-def read_root(data_id: int = 0, page: int = 1, limit: int = 10, srchTxt: str = ""):
-    if page < 1:
-        page = 0
-    if limit < 10:
-        limit = 10
-    df = df_dict[data_id]
-    df = df[df.apply(lambda row: row.astype(str).str.contains(srchTxt, case=False).any(), axis=1)]
-    print(df)
-    first_idx = (page - 1) * limit
-    last_idx = first_idx + limit - 1
-    total_size = df.shape[0]
-    first_page = 1
-    last_page = math.ceil(total_size / limit)
+@app.get("/", response_model=ResponseModelPaging[dict])
+def read_root(dataId: Optional[int] = 0, page: Optional[int] = 1, limit: Optional[int] = 10,
+              srchTxt: Optional[str] = ""):
+    try:
+        if page < 1:
+            page = 1
+        if limit < 10:
+            limit = 10
+        df = df_dict[dataId]
+        df = df[df.apply(lambda row: row.astype(str).str.contains(srchTxt, case=False).any(), axis=1)]
 
-    df_sliced = df[first_idx:last_idx + 1].copy()
+        first_idx = (page - 1) * limit
+        last_idx = first_idx + limit - 1
+        total_size = df.shape[0]
+        last_page = math.ceil(total_size / limit)
 
-    df_sliced["번호"] = [i for i in
-                       range(total_size - (page - 1) * limit, total_size - (page - 1) * limit - df_sliced.shape[0], -1)]
-    data = []
-    if df_sliced.shape[0] != 0:
-        data = df_sliced.to_dict("records")
+        df_sliced = df[first_idx:last_idx + 1].copy()
 
-    return {"sheetName": excel_utils.sheet_names[data_id], "data_id": data_id, "page": page, "limit": limit,
-            "first_page": first_page, "last_page": last_page, "firstIdx": first_idx, "lastIdx": last_idx,
-            "totalSize": total_size, "srchTxt": srchTxt,
-            "data": data}
+        df_sliced["번호"] = [i for i in
+                           range(total_size - (page - 1) * limit, total_size - (page - 1) * limit - df_sliced.shape[0],
+                                 -1)]
+        data = []
+        if df_sliced.shape[0] != 0:
+            data = df_sliced.to_dict("records")
+        paging = Paging(page=page, size=limit, totalPage=last_page, totalSize=total_size)
+        resp = ResponseModelPaging(items=data, paging=paging)
+    except Exception as e:
+        resp = ResponseModelPaging(isOk=False, msg=str(e))
+
+    return resp
